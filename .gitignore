@@ -216,3 +216,25 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# project private files
+.env
+
+# local models
+models/
+*.bin
+*.safetensors
+*.onnx
+*.onnx_data
+
+# private data and generated index
+data/raw/
+data/processed/
+data/metadata/
+vector_store/
+
+# outputs
+result.json
+raw_result.txt
+results*.xlsx
+tasks.xlsx
+*.log
