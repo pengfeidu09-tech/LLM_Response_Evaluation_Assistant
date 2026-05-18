@@ -1,6 +1,7 @@
 # Rubric 标准知识库 RAG 助手
 
 面向大模型文本标注与 Rubric 标注场景的标准知识库 RAG 助手。
+新增 RAG 评测模块：支持输入用户题目、模型回答和 Rubric，先检索本地标注标准知识库，再调用 DashScope / DeepSeek 输出结构化 JSON 评测结果。
 
 ## 项目背景
 
