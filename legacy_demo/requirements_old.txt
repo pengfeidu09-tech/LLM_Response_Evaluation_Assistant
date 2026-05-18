@@ -1,0 +1,5 @@
+dashscope
+python-dotenv
+pandas
+openpyxl
+streamlit

@@ -1,5 +1,13 @@
-dashscope
-python-dotenv
+sentence-transformers
+faiss-cpu
+numpy
 pandas
 openpyxl
+python-docx
 streamlit
+tqdm
+dashscope
+python-dotenv
+transformers
+torch
+python-calamine

@@ -1,47 +1,116 @@
-# LLM Response Evaluation Assistant
+# Rubric 标准知识库 RAG 助手
 
-## 项目简介
-
-本项目是一个基于 Rubric 的大模型回答质量评测助手，面向大模型标注、Rubric 评测和模型回答质量分析场景。
-
-用户可以在网页端输入原始题目、模型回答和 Rubric 标准，系统会调用大模型接口，从指令遵循、事实正确性、完整性、格式规范等维度生成结构化评测结果，并输出总体结论、评分、逐条 Rubric 判断、问题分析和修改建议。
+面向大模型文本标注与 Rubric 标注场景的标准知识库 RAG 助手。
 
 ## 项目背景
 
-本人目前参与大模型文本标准与 Rubric 标注相关工作。在实际标注过程中，人工逐条判断模型回答是否符合 Rubric 标准耗时较长，且不同标注员之间可能存在理解不一致的问题。
-
-因此，本项目尝试搭建一个 AI 辅助评测工具，用于提升模型回答质量判断和人工复核效率。
-
-## 当前功能
-
-- 支持从 `.env` 文件读取 API Key 和模型配置
-- 支持调用 DashScope / deepseek-r1 模型
-- 支持网页端输入用户题目、模型回答和 Rubric 标准
-- 支持输出 JSON 结构化评测结果
-- 支持展示总体结论、评分、逐条 Rubric 判断、问题分析和修改建议
-- 支持下载 JSON 结果
-- 支持命令行单条评测
-- 支持 Excel 批量评测脚本
+本项目旨在构建一个本地知识库，用于存储和检索各类文本标注标准（如 Rubric 标注标准、题目质量标注规范、文生文评测标准等），支持快速查找相关标准片段。
 
 ## 技术栈
 
-- Python
-- Streamlit
-- DashScope SDK
-- deepseek-r1
-- python-dotenv
-- pandas
-- openpyxl
-- Prompt Engineering
+- **向量模型**: BGE-M3
+- **向量数据库**: FAISS
+- **前端**: Streamlit
+- **文档处理**: python-docx, pandas, openpyxl
 
-## 项目结构
+## 目录结构
 
-```text
-LLM_Response_Evaluation_Assistant/
-├── app.py
-├── rubric_judge.py
-├── rubric_judge_v03_json.py
-├── batch_rubric_judge_v04.py
+```
+rubric_rag_assistant/
+├── data/
+│   ├── raw/              # 原始文档（.docx, .xlsx）
+│   ├── processed/        # 处理后的 chunks
+│   └── metadata/         # 元数据
+├── models/
+│   └── bge-m3/           # BGE-M3 模型文件
+├── vector_store/         # FAISS 向量索引
+├── scripts/              # 脚本文件
+│   ├── extract_documents.py
+│   ├── build_index.py
+│   ├── search_test.py
+│   └── rag_answer.py
+├── src/                  # 源代码模块
+│   ├── config.py
+│   ├── document_loader.py
+│   ├── chunker.py
+│   ├── embedder.py
+│   ├── vector_store.py
+│   ├── retriever.py
+│   └── prompt_templates.py
+├── app.py                # Streamlit 应用
 ├── requirements.txt
-├── README.md
-└── .env.example
+└── README.md
+```
+
+## 使用说明
+
+### 1. 放置原始文件
+
+将需要处理的标注标准文件（.docx 或 .xlsx）放入 `data/raw/` 目录。
+
+### 2. 提取文档并生成 chunks
+
+```bash
+python scripts/extract_documents.py
+```
+
+该脚本会：
+- 遍历 data/raw/ 目录下的 .docx 和 .xlsx 文件
+- 提取内容并切分成 chunks（chunk_size=800, overlap=120）
+- 自动识别标准类型
+- 输出到 data/processed/chunks.jsonl
+
+### 3. 构建向量索引
+
+```bash
+python scripts/build_index.py
+```
+
+该脚本会：
+- 加载 chunks.jsonl
+- 使用 BGE-M3 生成 embedding
+- 构建 FAISS IndexFlatIP 索引
+- 保存索引和元数据
+
+### 4. 测试检索
+
+```bash
+python scripts/search_test.py
+```
+
+提供交互式命令行测试，包含预设的测试问题。
+
+### 5. 生成 RAG Prompt
+
+```bash
+python scripts/rag_answer.py
+```
+
+输入问题，自动检索相关片段并生成可复制给大模型的 RAG Prompt。
+
+### 6. 启动 Streamlit 网页界面
+
+```bash
+streamlit run app.py
+```
+
+访问 http://localhost:8501 使用网页界面。
+
+## 标准类型识别规则
+
+- 文件名包含 "Rubric" 或 "Rubrics" → rubric_quality
+- 文件名包含 "题目质量" → prompt_quality
+- 文件名包含 "文生文" 或 "评测标准" → answer_evaluation
+- 文件名包含 "字数" → word_count_rule
+- 文件名包含 "标签体系" → label_taxonomy
+- 文件名包含 "人设" → persona_info
+- 其他 → general_standard
+
+## 后续升级方向
+
+- [ ] BM25 + FAISS 混合检索
+- [ ] 相似 chunk 去重
+- [ ] Rubric 质量检查 Agent
+- [ ] 标注建议 Agent
+- [ ] LoRA 微调分类模型
+- [ ] vLLM 部署
